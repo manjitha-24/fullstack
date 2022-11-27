@@ -1,66 +1,72 @@
-const { initializeApp, cert } = require('firebase-admin/app');
-const { getFirestore} = require('firebase-admin/firestore');
-
-var serviceAccount = require("./key.json");
-
-
-initializeApp({
-  credential: cert(serviceAccount)
-});
-
-const db = getFirestore();
-
-var express = require('express')  
-var app = express()  
-
-
-app.set('view engine', 'ejs');
-
-
-
-app.get('/', function (req, res) {  
-    var a = {name:"manjitha reddy",age:19};
-    res.render("dashboard",{data : a});  
-    }) ; 
-
-
-
-
-  
-app.get('/home', function (req, res) {  
-res.sendFile(__dirname+'/home.html');  
-}) ; 
-
-app.get('/login', function (req, res) {  
-    res.sendFile(__dirname+'/login.html');  
-    }) ; 
-
-app.get('/signup', function (req, res) {  
-        res.sendFile(__dirname+'/signup.html');  
-        }) ; 
-
-app.get('/signupsubmit', function (req, res) {  
-           // res.sendFile(__dirname+'/signup.html');
-            console.log(req.query.email);
-            console.log(req.query.mobile);
-            db.collection('users').add({
-                email: req.query.email,
-                mobile: req.query.mobile,
-            }).then(()=>{
-                res.send("signup succesfully");
+const express = require("express");
+        const app = express();
+        const port = 7070;
+        const { initializeApp, cert } = require("firebase-admin/app");
+        const { getFirestore } = require("firebase-admin/firestore");
+        
+        var serviceAccount = require("./key.json");
+        
+        initializeApp({
+          credential: cert(serviceAccount),
+        });
+        
+        const db = getFirestore();
+        
+        app.set("view engine", "ejs");
+        
+        
+        
+        app.get("/signin", (req, res) => {
+          res.render("signin");
+        });
+        
+        
+        
+        app.get("/signinsubmit", (req, res) => {
+          const email = req.query.email;
+          const password = req.query.password;  
+          db.collection('users')
+            .where("email", "==", email)
+            .where("password", "==", password)
+            .get()
+            .then((docs) => {
+              if (docs.size > 0) {
+                res.render("web");
+              }
+              else {
+                res.send("<h1>Login failed ,incorrect login credentials</h1>");
+              }
             });
-            
-            }); 
-    
-            app.get('/loginsubmit', function (req, res) {  
-                db.collection('users').where("email","==",req.query.email).where("mobile","==",req.query.mobile); 
-                if(docs.length>0){
-                    res.send("login succesfull");
-                }
-                else{
-                    res.send("login unsuccesfull");
-                }
-                }) ;  
-app.listen(3000, function () {  
-console.log('Example app listening on port 3000!')  
-})
+        });
+        
+        app.get("/signupsubmit", (req, res) => {
+          const firstname = req.query.firstname;
+          const lastname = req.query.lastname;
+          const email = req.query.email;
+          const password = req.query.password;
+          db.collection('users')
+            .add({
+              email: email,
+              password: password,
+            })
+            .then(() => {
+              res.render("signin");
+            });
+        });
+        
+        
+        app.get("/navsubmit", (req, res) => {
+            res.render("signin")
+        });
+        
+        app.get("/", (req, res) => {
+          res.render("signup");
+        });
+        
+        app.get("/web", (req, res) => {
+          res.render("web");
+        });
+        
+        app.listen(3000, function() {
+            console.log("Server is running on port " + 3000);
+        });
